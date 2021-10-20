@@ -1,0 +1,209 @@
+4520<<kops
+Landmark Technologies 
+Tel: +1 437 215 2483 
+mylandmarktech@gailcom 
+www.mylandmarktech.com 
+kops
+Setup Kubernetes (K8s) Cluster on AWS Using KOPS
+
+#!/bin/bash
+#1) Create Ubuntu EC2 instance in AWS
+
+#2) install AWSCLI
+
+ sudo apt update -y
+ sudo apt install unzip wget -y
+ sudo curl https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o awscli-bundle.zip
+ sudo apt install unzip python -y
+ sudo unzip awscli-bundle.zip
+ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+
+ sudo apt install awscli
+
+ 
+ 
+#3) Install kops software on ubuntu instance:
+
+ 	#Install wget if not installed
+ 	sudo apt install wget -y
+ 	sudo wget https://github.com/kubernetes/kops/releases/download/v1.16.1/kops-linux-amd64
+ 	sudo chmod +x kops-linux-amd64
+ 	sudo mv kops-linux-amd64 /usr/local/bin/kops
+ 
+#4) Install kubectl
+
+ sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+ sudo chmod +x ./kubectl
+ sudo mv ./kubectl /usr/local/bin/kubectl
+ 
+ aws s3 mb s3://class25a1.k8.local
+ aws s3 ls
+
+# 5) Create an IAM role from AWS Console or CLI with below Policies.
+
+	AmazonEC2FullAccess 
+	AmazonS3FullAccess
+	IAMFullAccess 
+	AmazonVPCFullAccess
+
+
+Then Attach IAM role to ubuntu server from Console Select KOPS Server --> Actions --> Instance Settings --> Attach/Replace IAM Role --> Select the role which
+You Created. --> Save.
+
+
+
+#6) create an S3 bucket Execute below commond in KOPS Server use unique bucket name if you get bucket name exists error.
+
+	
+    ex:
+	# S3 bucket name should be unique across AWS
+	#aws s3 mb s3://simonlegah.k8s.local    s3://nubong.k8s.local
+     
+	Expose environment variable:
+
+    # Add env variables in bashrc
+    vi .bashrc
+
+  export KOPS_STATE_STORE=s3://class25a.k8.local
+  export NAME=class25adevops.local 
+	
+	# Give Unique Name And S3 Bucket which you created.
+	export NAME=landmarktech.k8s.com  = [cluster name]
+  wonderTech.k8s.local  = cluster name:
+  wonder.k8.local:
+	export KOPS_STATE_STORE=s3://liontechpros8899.k8.local   [name of bucket]
+  export NAME=class26devops.local [name of cluster]
+
+
+
+kops create cluster \
+--name liontech.k8s.local \    #= cluster name 
+--zones ca-central-1a \
+--state s3://liontechpros8899.k8.local \    #= bucket name
+--yes
+
+
+
+
+
+ 
+    source .bashrc
+	
+#7) Create sshkeys before creating cluster
+
+    ssh-keygen
+ 
+
+# 8)Create kubernetes cluster definitions on S3 bucket
+
+	#kops create cluster --zones us-east-2c --networking weave --master-size t2.medium --master-count 1 --node-size t2.large --node-count=2 ${NAME}
+	kops create cluster --zones us-east-1d --networking weave --master-size t2.medium --master-count 1 --node-size t2.large --node-count=2 ${NAME}
+
+  MY NOTES:
+    kops create cluster --name=liontech.k8s.local \
+  --state=s3://liontechpros8899.k8.local --zones=ca-central-1a \
+  --node-count=2 --node-size=t2.large --master-size=t2.large \
+  
+
+
+
+
+
+
+	kops create cluster --zones us-east-1e,zones us-east-2c --networking weave --master-size t2.medium --master-count 2 --node-size t2.micro --node-count=2 ${NAME}
+
+	kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/key.pub
+  kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/elvis.pub
+
+
+# 9) Create kubernetes cluser
+
+	 kops update cluster ${NAME} --yes
+kub
+
+validate cluster: kops validate cluster
+ * list nodes: kubectl get nodes --show-labels
+ * ssh to the master: ssh -i ~/.ssh/id_rsa admin@api.wondertech.k8s.local
+ * the admin user is specific to Debian. If not using Debian please use the appropriate user based on your OS.
+ * read about installing addons at: https://github.com/kubernetes/kops/blob/master/docs/operations/addons.md.
+
+# 10) Validate your cluster(KOPS will take some time to create cluster ,Execute below commond after 3 or 4 mins)
+
+Validating cluster liontech.k8s.local 
+kops validate cluster liontech.k8s.local 
+
+# 11) To list nodes
+
+	  kubectl get nodes 
+  
+  
+  
+# 12) To Delete Cluster
+
+   kops delete cluster --name=${NAME} --state=${KOPS_STATE_STORE} --yes  
+   
+====================================================================================================
+
+
+13# IF you wan to SSH to Kubernates Master or Nodes Created by KOPS. You can SSH From KOPS_Server
+
+ssh 
+it above command  is not working
+then execute
+ssh -i ~/key.pub admin@
+    ssh into master:
+ ssh -i elvis  admin@ec2-35-183-207-108.ca-central-1.compute.amazonaws.com
+
+Suggestions:
+ * validate cluster: kops validate cluster
+ * list nodes: kubectl get nodes --show-labels
+ * ssh to the master: ssh -i ~/.ssh/id_rsa admin@api.landmarktech.k8s.local
+    ssh -i elvis  admin@ec2-35-183-207-108.ca-central-1.compute.amazonaws.com
+ * the admin user is specific to Debian. If not using Debian please use the appropri    ate user based on your OS.
+ * read about installing addons at: https://github.com/kubernetes/kops/blob/master/d    ocs/operations/addons.md.
+ 
+ more suggestions:
+ 
+ Suggestions:
+ * list clusters with: kops get cluster
+ * edit this cluster with: kops edit cluster landmarktech.k8s.local
+ * edit your node instance group: kops edit ig --name=landmarktech.k8s.local nodes
+ * edit your master instance group: kops edit ig --name=landmarktech.k8s.local master-us-east-2c
+
+Finally configure your cluster with: kops update cluster --name liontech.k8s.local --yes
+
+kops@eks:~$ kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/id_rsa.pub
+kops@eks:~$ kops update cluster ${NAME} --yes
+
+********************************************************************************        *
+
+A new kops version is available: 1.18.2
+
+Upgrading is recommended
+More information: https://github.com/kubernetes/kops/blob/master/permalinks/upgrade_kops.md#1.18.2
+
+sudo wget https://github.com/kubernetes/kops/releases/download/v1.18.2/kops-linux-amd64
+
+echo "ansible  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ansible
+
+
+echo "eks1  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/eks1
+
+echo "k8s  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/k8s
+echo "eks1  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/eks1
+
+echo "terraform  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/terraform
+
+echo "gcloud  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/gcloud
+echo "jenkins ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/jenkins
+
+
+
+ssh admin@ec2-52-91-86-23.compute-1.amazonaws.com
+
+
+WINDOWS PASSWORD: 
+
+    uIr!xdb=YMZy&AZeNV7s%SSJasrzs$PB
+
+ssh -i ~/.ssh/id_rsa admin@ec2-107-21-73-110.compute-1.amazonaws.com
